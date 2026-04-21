@@ -1,4 +1,10 @@
 
+---
+title: Encryptit
+sdk: docker
+app_port: 7860
+---
+
 Full-stack Encryptit app with a React frontend, Express backend, SQLite storage, email verification, and Google/Gmail sign-in.
 
 ## Run Locally
