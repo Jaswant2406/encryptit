@@ -1,33 +1,32 @@
 import nodemailer from 'nodemailer';
 
-/**
- * Sends a verification email to the user using Gmail SMTP.
- * @param toEmail The user's email address
- * @param token The unique verification token
- */
+function createTransporter(emailUser: string, emailPass: string) {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
+    auth: {
+      user: emailUser,
+      pass: emailPass.replace(/\s+/g, ''),
+    },
+  });
+}
+
 export async function sendVerificationEmail(toEmail: string, token: string) {
   const emailUser = process.env.EMAIL;
   const emailPass = process.env.EMAIL_PASSWORD;
 
   if (!emailUser || !emailPass) {
-    console.warn('⚠ Email credentials not configured. Skipping email sending.');
-    return;
+    throw new Error('Email credentials are not configured.');
   }
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // Use SSL
-    auth: {
-      user: emailUser,
-      pass: emailPass,
-    },
-  });
 
   const appUrl = process.env.APP_URL || 'http://localhost:3000';
   const verificationLink = `${appUrl}/api/verify-email?token=${token}`;
 
-  const mailOptions = {
+  await createTransporter(emailUser, emailPass).sendMail({
     from: emailUser,
     to: toEmail,
     subject: 'Verify your email',
@@ -44,44 +43,23 @@ export async function sendVerificationEmail(toEmail: string, token: string) {
         <p style="color: #999; font-size: 10px;">Alternatively, copy and paste this link into your browser: <br/> ${verificationLink}</p>
       </div>
     `,
-  };
+  });
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✔ Verification email sent successfully to ${toEmail}`);
-  } catch (error) {
-    console.error(`✘ Failed to send verification email to ${toEmail}:`, error);
-  }
+  console.log(`Verification email sent successfully to ${toEmail}`);
 }
 
-/**
- * Sends a password reset email to the user using Gmail SMTP.
- * @param toEmail The user's email address
- * @param token The unique reset token
- */
 export async function sendPasswordResetEmail(toEmail: string, token: string) {
   const emailUser = process.env.EMAIL;
   const emailPass = process.env.EMAIL_PASSWORD;
 
   if (!emailUser || !emailPass) {
-    console.warn('⚠ Email credentials not configured. Skipping email sending.');
-    return;
+    throw new Error('Email credentials are not configured.');
   }
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: emailUser,
-      pass: emailPass,
-    },
-  });
 
   const appUrl = process.env.APP_URL || 'http://localhost:3000';
   const resetLink = `${appUrl}/reset-password?token=${token}`;
 
-  const mailOptions = {
+  await createTransporter(emailUser, emailPass).sendMail({
     from: emailUser,
     to: toEmail,
     subject: 'Reset your password',
@@ -98,12 +76,7 @@ export async function sendPasswordResetEmail(toEmail: string, token: string) {
         <p style="color: #999; font-size: 10px;">Alternatively, copy and paste this link into your browser: <br/> ${resetLink}</p>
       </div>
     `,
-  };
+  });
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`✔ Password reset email sent successfully to ${toEmail}`);
-  } catch (error) {
-    console.error(`✘ Failed to send password reset email to ${toEmail}:`, error);
-  }
+  console.log(`Password reset email sent successfully to ${toEmail}`);
 }

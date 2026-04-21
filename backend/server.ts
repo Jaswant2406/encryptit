@@ -125,7 +125,16 @@ async function startServer() {
       ]
     );
 
-    await sendVerificationEmail(email, verificationToken);
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (error) {
+      console.error('Verification email failed:', error);
+      await db.run('DELETE FROM users WHERE email = ? AND email_verified = 0', [email]);
+      return res.status(502).json({
+        detail: "Could not send verification email. Check the app email settings and try again."
+      });
+    }
+
     res.status(201).json({ message: "Check your email to verify your account" });
   }));
 
@@ -154,8 +163,14 @@ async function startServer() {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     await db.run('UPDATE users SET verification_token = ? WHERE id = ?', [verificationToken, user.id]);
 
-    // Send real verification email
-    await sendVerificationEmail(email, verificationToken);
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (error) {
+      console.error('Verification email failed:', error);
+      return res.status(502).json({
+        detail: "Could not send verification email. Check the app email settings and try again."
+      });
+    }
 
     res.json({ message: "Verification email resent. Please check your inbox." });
   }));
@@ -269,8 +284,14 @@ async function startServer() {
       [token, expiry.toISOString(), email]
     );
 
-    // Send real password reset email
-    await sendPasswordResetEmail(email, token);
+    try {
+      await sendPasswordResetEmail(email, token);
+    } catch (error) {
+      console.error('Password reset email failed:', error);
+      return res.status(502).json({
+        detail: "Could not send password reset email. Check the app email settings and try again."
+      });
+    }
 
     res.json({ message: "If this email is registered, a reset link will be sent." });
   }));
