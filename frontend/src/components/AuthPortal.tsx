@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Shield, Mail, Lock, User, ArrowRight, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { FingerprintLogo } from './Logo';
 import { cn } from '@/src/lib/utils';
@@ -14,6 +14,7 @@ interface AuthPortalProps {
 }
 
 export function AuthPortal({ onLogin }: AuthPortalProps) {
+  const googleButtonRef = useRef<HTMLDivElement>(null);
   const [googleClientId, setGoogleClientId] = useState('');
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
@@ -54,7 +55,9 @@ export function AuthPortal({ onLogin }: AuthPortalProps) {
     document.head.appendChild(script);
 
     script.onload = () => {
-      if (window.google) {
+      const buttonParent = googleButtonRef.current;
+      if (window.google && buttonParent) {
+        buttonParent.replaceChildren();
         window.google.accounts.id.initialize({
           client_id: googleClientId,
           callback: handleGoogleResponse,
@@ -62,11 +65,11 @@ export function AuthPortal({ onLogin }: AuthPortalProps) {
           cancel_on_tap_outside: true,
         });
         window.google.accounts.id.renderButton(
-          document.getElementById('google-signin-btn'),
+          buttonParent,
           { 
             theme: 'outline', 
             size: 'large', 
-            width: '100%',
+            width: 360,
             text: 'continue_with',
             shape: 'rectangular'
           }
@@ -356,7 +359,7 @@ export function AuthPortal({ onLogin }: AuthPortalProps) {
               </div>
 
               {googleClientId && (
-                <div id="google-signin-btn" className="w-full border-2 border-black rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"></div>
+                <div ref={googleButtonRef} className="w-full min-h-10 border-2 border-black rounded-xl overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all"></div>
               )}
 
               <button 

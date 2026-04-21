@@ -93,8 +93,8 @@ export function AnalyticsDashboard({ files }: AnalyticsDashboardProps) {
             </div>
           </div>
           
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[280px] min-h-[280px] min-w-0 w-full">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <AreaChart data={entropyData}>
                 <CartesianGrid strokeDasharray="0" stroke="#000000" strokeOpacity={0.1} vertical={false} />
                 <XAxis 
@@ -199,8 +199,8 @@ export function AnalyticsDashboard({ files }: AnalyticsDashboardProps) {
       <div className="rounded-2xl border-2 border-black bg-white p-8 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
         <h3 className="text-xl font-bold uppercase tracking-tight mb-8 text-text-main">Protocol Distribution</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[240px] min-h-[240px] min-w-0 w-full">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <PieChart>
                 <Pie
                   data={encryptionTypeData.length > 0 ? encryptionTypeData : [{name: 'None', value: 1}]}
