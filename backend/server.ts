@@ -19,6 +19,7 @@ const DEFAULT_GOOGLE_CLIENT_ID = '457661341021-1aol2pb2b6pn1in0e1ku2nk88sk22o4j.
 const googleClientId = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
 const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
 const isEmailConfigured = () => Boolean(process.env.EMAIL && process.env.EMAIL_PASSWORD);
+const appUrl = process.env.APP_URL || 'http://localhost:3000';
 
 async function startServer() {
   const app = express();
@@ -74,6 +75,44 @@ async function startServer() {
 
     (req as any).user = payload;
     next();
+  };
+
+  const completeGoogleSignIn = async (token: string) => {
+    if (!googleClient) {
+      throw new Error('Google authentication is not configured');
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: googleClientId,
+    });
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email) {
+      throw new Error('Invalid Google token');
+    }
+    if (!payload.email_verified) {
+      throw new Error('Google account email is not verified');
+    }
+
+    const email = payload.email;
+    const db = await getDb();
+    let user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
+
+    if (!user) {
+      await db.run('INSERT INTO users (email, name, email_verified) VALUES (?, ?, 1)', [email, payload.name || email.split('@')[0]]);
+    } else if (user.email_verified === 0) {
+      await db.run(
+        'UPDATE users SET email_verified = 1, verification_token = NULL, name = COALESCE(name, ?) WHERE email = ?',
+        [payload.name || email.split('@')[0], email]
+      );
+    }
+
+    return {
+      accessToken: createAccessToken({ sub: email }),
+      email,
+      name: payload.name || email.split('@')[0],
+    };
   };
 
   // --- API Routes ---
@@ -227,41 +266,35 @@ async function startServer() {
   // Google Auth
   app.post('/api/auth/google', asyncHandler(async (req: Request, res: Response) => {
     const { token } = req.body;
-    if (!googleClient) {
-      return res.status(503).json({ detail: "Google authentication is not configured" });
-    }
     try {
-      const ticket = await googleClient.verifyIdToken({
-        idToken: token,
-        audience: googleClientId,
-      });
-      const payload = ticket.getPayload();
-      if (!payload || !payload.email) {
-        return res.status(400).json({ detail: "Invalid Google token" });
-      }
-      if (!payload.email_verified) {
-        return res.status(403).json({ detail: "Google account email is not verified" });
-      }
-
-      const email = payload.email;
-      const db = await getDb();
-      let user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-
-      if (!user) {
-        await db.run('INSERT INTO users (email, name, email_verified) VALUES (?, ?, 1)', [email, payload.name || email.split('@')[0]]);
-        user = await db.get('SELECT * FROM users WHERE email = ?', [email]);
-      } else if (user.email_verified === 0) {
-        await db.run(
-          'UPDATE users SET email_verified = 1, verification_token = NULL, name = COALESCE(name, ?) WHERE email = ?',
-          [payload.name || email.split('@')[0], email]
-        );
-      }
-
-      const accessToken = createAccessToken({ sub: email });
-      res.json({ access_token: accessToken, token_type: "bearer", email: email, name: payload.name });
+      const result = await completeGoogleSignIn(token);
+      res.json({ access_token: result.accessToken, token_type: "bearer", email: result.email, name: result.name });
     } catch (error) {
       console.error('Google Auth Error:', error);
       res.status(400).json({ detail: "Google authentication failed" });
+    }
+  }));
+
+  app.post('/api/auth/google/redirect', asyncHandler(async (req: Request, res: Response) => {
+    const token = req.body.credential;
+
+    if (!token) {
+      return res.redirect(`${appUrl}/?google_error=missing_credential`);
+    }
+
+    try {
+      const result = await completeGoogleSignIn(token);
+      res.cookie('encryptit_access_token', result.accessToken, {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 15 * 60 * 1000,
+        path: '/',
+      });
+      res.redirect(`${appUrl}/?google_login=1`);
+    } catch (error) {
+      console.error('Google Redirect Auth Error:', error);
+      res.redirect(`${appUrl}/?google_error=auth_failed`);
     }
   }));
 

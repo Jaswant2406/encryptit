@@ -11,6 +11,19 @@ import { Shield, Lock, Unlock, BarChart3, Files, User, LogOut, Image as ImageIco
 import { FingerprintLogo } from './components/Logo';
 import { cn } from '@/src/lib/utils';
 
+function readCookie(name: string) {
+  const prefix = `${name}=`;
+  return document.cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix))
+    ?.slice(prefix.length) || null;
+}
+
+function clearCookie(name: string) {
+  document.cookie = `${name}=; Max-Age=0; path=/; SameSite=Lax`;
+}
+
 export default function App() {
   const [currentView, setCurrentView] = useState<View>('encrypt');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,6 +33,13 @@ export default function App() {
 
   React.useEffect(() => {
     const checkAuth = async () => {
+      const cookieToken = readCookie('encryptit_access_token');
+      if (cookieToken) {
+        localStorage.setItem('access_token', cookieToken);
+        clearCookie('encryptit_access_token');
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
@@ -116,6 +136,7 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
+    clearCookie('encryptit_access_token');
     setUser(null);
     setFiles([]);
   };

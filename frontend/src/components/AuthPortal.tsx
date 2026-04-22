@@ -60,9 +60,10 @@ export function AuthPortal({ onLogin }: AuthPortalProps) {
         buttonParent.replaceChildren();
         window.google.accounts.id.initialize({
           client_id: googleClientId,
-          callback: handleGoogleResponse,
           auto_select: false,
           cancel_on_tap_outside: true,
+          ux_mode: 'redirect',
+          login_uri: `${window.location.origin}/api/auth/google/redirect`,
         });
         window.google.accounts.id.renderButton(
           buttonParent,
@@ -81,27 +82,6 @@ export function AuthPortal({ onLogin }: AuthPortalProps) {
       document.head.removeChild(script);
     };
   }, [googleClientId]);
-
-  const handleGoogleResponse = async (response: any) => {
-    setIsProcessing(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: response.credential }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || 'Google login failed');
-      
-      localStorage.setItem('access_token', data.access_token);
-      onLogin(data.email);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const validatePassword = (pass: string) => {
     if (pass.length < 6) return "Password must be at least 6 characters";
