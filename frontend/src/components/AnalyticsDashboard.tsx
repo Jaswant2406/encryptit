@@ -1,32 +1,13 @@
-import React, { useState } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area, PieChart, Pie } from 'recharts';
-import { Shield, AlertTriangle, CheckCircle, Lock, ShieldCheck, RefreshCw, FileText, Info, Database, Files, Clock, Zap } from 'lucide-react';
-import { auditSecurity } from '@/src/services/aiService';
+import React from 'react';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, AreaChart, Area, PieChart, Pie } from 'recharts';
+import { Lock, ShieldCheck, FileText, Database, Clock } from 'lucide-react';
 import { FileRecord } from '@/src/types';
-import { cn } from '@/src/lib/utils';
 
 interface AnalyticsDashboardProps {
   files: FileRecord[];
 }
 
 export function AnalyticsDashboard({ files }: AnalyticsDashboardProps) {
-  const [isAuditing, setIsAuditing] = useState(false);
-  const [auditResult, setAuditResult] = useState<string | null>(null);
-
-  const handleAudit = async () => {
-    setIsAuditing(true);
-    try {
-      const config = `Total Files: ${files.length}, Avg Entropy: ${(files.reduce((acc, f) => acc + f.entropyAfter, 0) / (files.length || 1)).toFixed(2)}, Encryption Types: ${Array.from(new Set(files.map(f => f.encryptionType))).join(', ')}`;
-      const report = await auditSecurity(config);
-      setAuditResult(report || "Audit unavailable.");
-    } catch (error) {
-      console.error(error);
-      setAuditResult("Failed to generate audit. Please try again later.");
-    } finally {
-      setIsAuditing(false);
-    }
-  };
-
   const stats = [
     { label: 'Total Vaults', value: files.length, icon: Lock, color: 'text-text-main', bg: 'bg-white' },
     { label: 'Total Storage', value: `${(files.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB`, icon: Database, color: 'text-text-main', bg: 'bg-white' },
@@ -58,14 +39,6 @@ export function AnalyticsDashboard({ files }: AnalyticsDashboardProps) {
             Real-time Cryptographic Posture Monitoring
           </p>
         </div>
-        <button 
-          onClick={handleAudit}
-          disabled={isAuditing}
-          className="relative h-12 px-8 rounded-xl border-2 border-black bg-black text-white text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-50"
-        >
-          {isAuditing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          <span>Run Security Audit</span>
-        </button>
       </div>
 
       <div className="flex flex-wrap gap-2">

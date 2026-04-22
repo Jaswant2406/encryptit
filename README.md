@@ -1,15 +1,30 @@
-
 ---
 title: Encryptit
 sdk: docker
 app_port: 7860
 ---
 
+# Encryptit
+
 Full-stack Encryptit app with a React frontend, Express backend, SQLite storage, email verification, and Google/Gmail sign-in.
+
+## Screenshots
+
+![Encryption](docs/screenshots/encryption.png)
+
+![Decryption](docs/screenshots/decryption.png)
+
+![Steganography](docs/screenshots/steganography.png)
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+![Encryption Result](docs/screenshots/encryption-result.png)
+
+![Files](docs/screenshots/files.png)
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
@@ -21,7 +36,7 @@ Full-stack Encryptit app with a React frontend, Express backend, SQLite storage,
 
 For development with Vite middleware:
 
-   `npm run dev`
+`npm run dev`
 
 ## Hugging Face Spaces
 
@@ -34,7 +49,6 @@ Required Space secrets for the full auth flow:
 - `EMAIL` and `EMAIL_PASSWORD`: required for email/password signup verification and password reset emails. For Gmail SMTP, use a Gmail app password.
 - `APP_URL`: required for email verification and password reset links. Set it to your Space URL.
 - `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE`: optional SMTP overrides. Gmail defaults to `smtp.gmail.com`, port `587`, and STARTTLS.
-
 - `DATABASE_PATH`: optional; defaults to `/data/database.sqlite` in Docker.
 
 Email/password users must verify their email before login. Google/Gmail users can log in only when Google confirms that the account email is verified.
