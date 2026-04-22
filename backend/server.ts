@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { getDb } from './database';
-import { sendVerificationEmail, sendPasswordResetEmail } from './emailUtils';
+import { isEmailDeliveryConfigured, sendVerificationEmail, sendPasswordResetEmail } from './emailUtils';
 import { hashPassword, verifyPassword, createAccessToken, verifyAccessToken } from './auth';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
@@ -18,7 +18,7 @@ process.on('unhandledRejection', (reason, promise) => {
 const DEFAULT_GOOGLE_CLIENT_ID = '457661341021-1aol2pb2b6pn1in0e1ku2nk88sk22o4j.apps.googleusercontent.com';
 const googleClientId = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
 const googleClient = googleClientId ? new OAuth2Client(googleClientId) : null;
-const isEmailConfigured = () => Boolean(process.env.EMAIL && process.env.EMAIL_PASSWORD);
+const isEmailConfigured = () => isEmailDeliveryConfigured();
 const appUrl = process.env.APP_URL || 'http://localhost:3000';
 
 async function startServer() {

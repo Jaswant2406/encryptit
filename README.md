@@ -46,9 +46,17 @@ Required Space secrets for the full auth flow:
 
 - `JWT_SECRET`: required for secure sessions.
 - `GOOGLE_CLIENT_ID`: required for Google/Gmail sign-in. Add the Space URL to this OAuth client's Authorized JavaScript origins in Google Cloud Console.
-- `EMAIL` and `EMAIL_PASSWORD`: required for email/password signup verification and password reset emails. For Gmail SMTP, use a Gmail app password.
 - `APP_URL`: required for email verification and password reset links. Set it to your Space URL.
-- `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE`: optional SMTP overrides. Gmail defaults to `smtp.gmail.com`, port `587`, and STARTTLS.
 - `DATABASE_PATH`: optional; defaults to `/data/database.sqlite` in Docker.
+
+Recommended email setup:
+
+- `EMAIL_FROM`: sender address used for verification and reset emails.
+- `RESEND_API_KEY`: preferred production option. Resend delivers verification emails more reliably than Gmail SMTP on hosted containers.
+
+SMTP fallback:
+
+- `EMAIL` and `EMAIL_PASSWORD`: optional SMTP credentials. For Gmail SMTP, use a Gmail app password.
+- `SMTP_HOST`, `SMTP_PORT`, and `SMTP_SECURE`: optional SMTP overrides. Gmail defaults to `smtp.gmail.com`, port `587`, and STARTTLS.
 
 Email/password users must verify their email before login. Google/Gmail users can log in only when Google confirms that the account email is verified.
